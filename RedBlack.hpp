@@ -1,26 +1,23 @@
 #ifndef REDBLACK_HPP
 #define REDBLACK_HPP
 
-template<typename T>
 struct Node {
     bool isRed;
-    int key;
-    T data;
-    Node<T>* left;
-    Node<T>* right;
-    Node(int k, T x, bool red) : data(x), key(k), isRed(red) {}
+    int data;
+    Node* left;
+    Node* right;
+    Node(int x, bool red) : data(x), isRed(red) {}
 };
 
 
-template<typename T>
 class RedBlackTree {
     private:
-        Node<T>* root;
+        Node* root;
 
-        Node<T>* traverseTree(int Key) {
+        Node* traverseTree(int data) {
             if(!root) return nullptr;
 
-            Node<T>* curr = root;
+            Node* curr = root;
 
             
         }
@@ -28,10 +25,10 @@ class RedBlackTree {
     public:
         RedBlackTree() : root(nullptr) {}
 
-        // insert a new node, returns false if an error occured
-        bool insertNode(int key, T data) {
+        // insert a new node
+        bool insertNode(int data) {
             if(!root) {
-                root = new Node(key, data, false);
+                root = new Node(data, false);
                 return true;
             }
 
@@ -40,7 +37,7 @@ class RedBlackTree {
             return false;
         }
 
-        Node<T>* getRoot() {
+        Node* getRoot() {
             return root;
         }
 
