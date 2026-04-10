@@ -4,52 +4,48 @@ using namespace std;
 
 int main() {
 
-    srand(time(0));
-
-    BST<int> tree;
+    BST<int, int> tree;
 
     for(int i = 0; i < 100; i++) {
-        tree.insertNode(rand() % 1000);
+        int temp = rand() % 1000;
+        tree.put(temp, temp);
     }
 
-    while (true) {
-        int input;
-        int key;
-        cout << "\n(1) search\n(2) delete\n(3) insert\n(4) print inorder\n(5) exit\n\nInput: ";
-        cin >> input;
+    tree.printInorder();
 
-        if(input != 4) {
-            cout << "Key: ";
-            cin >> key;
-        }
+    // while (true) {
+    //     int input;
+    //     int key;
+    //     cout << "\n(1) search\n(2) delete\n(3) insert\n(4) print inorder\n(5) exit\n\nInput: ";
+    //     cin >> input;
 
-        Node<int>* node;
+    //     if(input != 4) {
+    //         cout << "Key: ";
+    //         cin >> key;
+    //     }
 
-        switch (input) {
-            case 1:
-                node = tree.searchNode(key);
-                if(!node) cout << "not found\n";
-                else cout << "found\n";
-                break;
+    //     switch (input) {
+    //         // insert
+    //         case 1:
+    //             break;
             
-            case 2:
-                tree.deleteNode(key);
-                break;
+    //         // search
+    //         case 2:
+    //             break;
 
-            case 3:
-                tree.insertNode(key);
-                break;
+    //         // delete
+    //         case 3:
+    //             break;
 
-            case 4:
-                cout << '\n';
-                tree.inorderTraversal();
-                cout << '\n';
-                break;
+    //         // print inorder
+    //         case 4:
+    //             break;
             
-            case 5:
-                return 0;
-        }
-    }
+    //         // exit
+    //         case 5:
+    //             return 0;
+    //     }
+    // }
 
-    return -1;
+    return 0;
 }

@@ -21,7 +21,7 @@ class BST {
 
         // destroy subtree starting at p
         void destroy(Node* p) {
-            if(!p) return
+            if(!p) return;
             destroy(p->left);
             destroy(p->right);
             delete p;
@@ -82,8 +82,15 @@ class BST {
             return std::max(height(p->left), height(p->right)) + 1;
         }
 
+        void inorder(Node* p) {
+            if(!p) return;
+            inorder(p->left);
+            std::cout << p->data << ' ';
+            inorder(p->right);
+        }
+
     public:
-        BST() : root(nullptr), size(0) {}
+        BST() : root(nullptr), treeSize(0) {}
         ~BST() { destroy(root); root = nullptr; treeSize = 0; };
 
         void put(K key, T data) { root = put(root, key, data); }
@@ -107,6 +114,8 @@ class BST {
         int height() { return height(root); }
 
         bool isEmpty() { return treeSize == 0; }
+
+        void printInorder() { inorder(root); std::cout << '\n';}
 };
 
 #endif
