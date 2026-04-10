@@ -1,49 +1,141 @@
 #ifndef REDBLACK_HPP
 #define REDBLACK_HPP
 
-struct Node {
-    bool isRed;
-    int data;
-    Node* left;
-    Node* right;
-    Node(int x, bool red) : data(x), isRed(red) {}
-};
+#include <iostream>
 
-
-class RedBlackTree {
+// K must be comparable
+template<typename K, typename T>
+class RedBlack {
     private:
+
+        enum Colour { RED, BLACK };
+
+        struct Node {
+            K key;
+            T data;
+            Node* left;
+            Node* right;
+            Colour colour;
+
+            Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), colour(red) {}
+        };
+
         Node* root;
+        int treeSize;
 
-        Node* traverseTree(int data) {
-            if(!root) return nullptr;
+        // destroy subtree starting at p
+        void destroy(Node* p) {
+            if(!p) return;
+            destroy(p->left);
+            destroy(p->right);
+            delete p;
+        }
 
-            Node* curr = root;
+        Node* rotateLeft() {
 
+        }
+
+        Node* rotateRight() {
+
+        }
+
+        void flipColours() {
+
+        }
+
+        bool isRed() {
             
+        }
+
+        Node* put(Node* p, K key, T data) {
+            if(!p) return new Node(key, data);
+
+            if(key < p->key) p->left = put(p->left, key, data);
+            else if(key > p->key) p->right = put(p->right, key, data);
+
+            return p;
+        }
+
+        // find node with key
+        Node* find(Node* p, K key) {
+            if(!p || key == p->key) return p;
+            if(key < p->key) return find(p->left, key);
+            if(key > p->key) return find(p->right, key);
+        }
+
+        // delete node with key
+        Node* deleteNode(Node* p, K key) {
+            if(!p) return nullptr;
+            
+            if(key < p->key) p->left = deleteNode(p->left, key);
+            else if(key > p->key) p->right = deleteNode(p->right, key);
+            else {
+                treeSize--;
+                Node* temp;
+                if(!p->left) {
+                    temp = p->right;
+                    delete p;
+                    return temp;
+                }
+
+                if(!p->right) {
+                    temp = p->left;
+                    delete p;
+                    return temp;
+                }
+
+                temp = p->right;
+                while(temp && temp->left) {
+                    temp = temp->left;
+                }
+
+                p->key = temp->key;
+                p->data = temp->data;
+                p->right = deleteNode(p->right, temp->key);
+            }
+
+            return p;
+        }
+
+        int height(Node* p) {
+            if(!p) return -1;
+            return std::max(height(p->left), height(p->right)) + 1;
+        }
+
+        void inorder(Node* p) {
+            if(!p) return;
+            inorder(p->left);
+            std::cout << p->data << ' ';
+            inorder(p->right);
         }
 
     public:
-        RedBlackTree() : root(nullptr) {}
+        RedBlack() : root(nullptr), treeSize(0) {}
+        ~RedBlack() { destroy(root); root = nullptr; treeSize = 0; };
 
-        // insert a new node
-        bool insertNode(int data) {
-            if(!root) {
-                root = new Node(data, false);
-                return true;
-            }
+        void put(K key, T data) { root = put(root, key, data); }
 
-            
-
-            return false;
+        T* get(K key) { 
+            Node* node = find(root, key);
+            if(node) return node->data;
+            return nullptr;
         }
 
-        Node* getRoot() {
-            return root;
+        bool contains(K key) { return find(root, key); }
+
+        bool remove(K key) {
+            if(!contains(key)) return false;
+            deleteNode(key);
+            return true;
         }
 
-        int getHeight() {
-            return -1;
-        }
+        int size() { return treeSize; }
+
+        int height() { return height(root); }
+
+        bool isEmpty() { return treeSize == 0; }
+
+        void printInorder() { inorder(root); std::cout << '\n';}
 };
 
 #endif

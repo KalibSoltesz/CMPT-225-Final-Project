@@ -1,5 +1,5 @@
-#ifndef BST_HPP
-#define BST_HPP
+#ifndef AVL_HPP
+#define AVL_HPP
 
 #include <iostream>
 
@@ -15,8 +15,9 @@ class AVL {
             Node* left;
             Node* right;
             Node* parent;
+            int height;
             
-            Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr) {}
+            Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr), height(1) {}
         };
 
         Node* root;
@@ -28,6 +29,16 @@ class AVL {
             destroy(p->left);
             destroy(p->right);
             delete p;
+        }
+
+        bool unbalanced(Node* p) {
+            if(!p) return false;
+            if(std::abs(p->left->height - p->right->height) > 1) return true;
+            return false;
+        }
+
+        void updateHeight(Node* p) {
+            if(p) p->height = std::max(p->left->height, p->right->height) + 1;
         }
 
         // recursive insertion function
@@ -45,8 +56,45 @@ class AVL {
                 p->right = put(p->right, key, data);
                 p->right->parent = p;
             }
+            else return p;
+
+            updateHeight(p);
 
             return p;
+        }
+
+        void rebalance(Node* p) {
+            Node* z = p;
+            while(!unbalanced(z)) z = z->parent;
+            Node* y = (z->left->height > z->right->height ? z->left : z->right);
+            Node* x = (y->left->height > y->right->height ? y->left : y->right);
+
+            trinode(z, y, x);
+        }
+
+        void trinode(Node* z, Node* y, Node* x) {
+            Node* a = z;
+            Node* b = y;
+            Node* c = x;
+            Node* temp;
+
+            while (a->key < b->key || b->key < c->key) {
+                if(a->key < b->key) {
+                    temp = a;
+                    a = b;
+                    b = temp;
+                }
+
+                if(b->key < c->key) {
+                    temp = b;
+                    b = c;
+                    c = temp;
+                }
+            }
+
+            b->parent = z->parent;
+
+
         }
 
         // recursive find function
@@ -65,17 +113,14 @@ class AVL {
             else {
                 treeSize--;
                 Node* temp;
-
                 if(!p->left) {
                     temp = p->right;
-                    temp->parent = p->parent;
                     delete p;
                     return temp;
                 }
 
                 if(!p->right) {
                     temp = p->left;
-                    temp->parent = p->parent;
                     delete p;
                     return temp;
                 }
@@ -91,12 +136,6 @@ class AVL {
             }
 
             return p;
-        }
-
-        // recursive height function
-        int height(Node* p) {
-            if(!p) return -1;
-            return std::max(height(p->left), height(p->right)) + 1;
         }
 
         // recursive printing functions
@@ -127,7 +166,10 @@ class AVL {
         ~AVL() { destroy(root); root = nullptr; treeSize = 0; };
 
         // insert new node
-        void put(K key, T data) { root = put(root, key, data); }
+        void put(K key, T data) {
+            root = put(root, key, data);
+            rebalance(find(key));
+        }
 
         // get data from node with key
         T* get(K key) { 
@@ -159,24 +201,14 @@ class AVL {
             return &(curr->key);
         }
 
-        // -1 if not found
-        int getHeight(K key) { return height(find(root, key)); }
-
-        int depth(K key) {
-            int count = 0;
-            Node* curr = find(root, key);
-            while(curr->parent) {
-                curr = curr->parent;
-                count++;
-            }
-            return count;
+        int height() {
+            if(!root) return -1;
+            return root->height;
         }
 
         bool contains(K key) { return find(root, key); }
 
         int size() { return treeSize; }
-
-        int treeHeight() { return height(root); }
 
         bool isEmpty() { return treeSize == 0; }
 

@@ -4,7 +4,7 @@ using namespace std;
 
 int main() {
 
-    BST<int, int> tree;
+    AVL<int, int> tree;
 
     for(int i = 0; i < 100; i++) {
         int temp = rand() % 1000;
