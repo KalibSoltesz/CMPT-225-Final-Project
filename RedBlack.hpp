@@ -1,141 +1,382 @@
-#ifndef REDBLACK_HPP
-#define REDBLACK_HPP
+#ifndef RB_HPP
+#define RB_HPP
 
 #include <iostream>
+#include <queue>
 
-// K must be comparable
-template<typename K, typename T>
+template <typename K, typename T>
 class RedBlack {
-    private:
+private:
+    enum Colour { RED, BLACK };
 
-        enum Colour { RED, BLACK };
+    struct Node {
+        K key;
+        T data;
+        Node* left;
+        Node* right;
+        Node* parent;
+        Colour colour;
 
-        struct Node {
-            K key;
-            T data;
-            Node* left;
-            Node* right;
-            Colour colour;
+        Node(K k, T x)
+            : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr), colour(RED) {}
+    };
 
-            Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), colour(red) {}
-        };
+    Node* root;
+    int nodeCount;
 
-        Node* root;
-        int treeSize;
+    long long rotationCount;
+    long long colourChangeCount;
 
-        // destroy subtree starting at p
-        void destroy(Node* p) {
-            if(!p) return;
-            destroy(p->left);
-            destroy(p->right);
-            delete p;
+    // ================= ROTATIONS =================
+    void rotateLeft(Node* x) {
+        Node* y = x->right;
+        x->right = y->left;
+
+        if (y->left)
+            y->left->parent = x;
+
+        y->parent = x->parent;
+
+        if (!x->parent)
+            root = y;
+        else if (x == x->parent->left)
+            x->parent->left = y;
+        else
+            x->parent->right = y;
+
+        y->left = x;
+        x->parent = y;
+
+        rotationCount++;
+    }
+
+    void rotateRight(Node* y) {
+        Node* x = y->left;
+        y->left = x->right;
+
+        if (x->right)
+            x->right->parent = y;
+
+        x->parent = y->parent;
+
+        if (!y->parent)
+            root = x;
+        else if (y == y->parent->left)
+            y->parent->left = x;
+        else
+            y->parent->right = x;
+
+        x->right = y;
+        y->parent = x;
+
+        rotationCount++;
+    }
+
+    void setColour(Node* n, Colour c) {
+        if (n && n->colour != c) {
+            n->colour = c;
+            colourChangeCount++;
         }
+    }
 
-        Node* rotateLeft() {
+    // ================= INSERT FIX =================
+    void fixInsert(Node* z) {
+        while (z->parent && z->parent->colour == RED) {
+            Node* gp = z->parent->parent;
 
+            if (z->parent == gp->left) {
+                Node* y = gp->right;
+
+                if (y && y->colour == RED) {
+                    setColour(z->parent, BLACK);
+                    setColour(y, BLACK);
+                    setColour(gp, RED);
+                    z = gp;
+                } else {
+                    if (z == z->parent->right) {
+                        z = z->parent;
+                        rotateLeft(z);
+                    }
+                    setColour(z->parent, BLACK);
+                    setColour(gp, RED);
+                    rotateRight(gp);
+                }
+            } else {
+                Node* y = gp->left;
+
+                if (y && y->colour == RED) {
+                    setColour(z->parent, BLACK);
+                    setColour(y, BLACK);
+                    setColour(gp, RED);
+                    z = gp;
+                } else {
+                    if (z == z->parent->left) {
+                        z = z->parent;
+                        rotateRight(z);
+                    }
+                    setColour(z->parent, BLACK);
+                    setColour(gp, RED);
+                    rotateLeft(gp);
+                }
+            }
         }
+        setColour(root, BLACK);
+    }
 
-        Node* rotateRight() {
-
+    // ================= SEARCH =================
+    Node* findNode(K key) const {
+        Node* cur = root;
+        while (cur) {
+            if (key < cur->key)
+                cur = cur->left;
+            else if (key > cur->key)
+                cur = cur->right;
+            else
+                return cur;
         }
+        return nullptr;
+    }
 
-        void flipColours() {
+    // ================= MIN =================
+    Node* minimum(Node* n) {
+        while (n->left)
+            n = n->left;
+        return n;
+    }
 
+    // ================= TRANSPLANT =================
+    void transplant(Node* u, Node* v) {
+        if (!u->parent)
+            root = v;
+        else if (u == u->parent->left)
+            u->parent->left = v;
+        else
+            u->parent->right = v;
+
+        if (v)
+            v->parent = u->parent;
+    }
+
+    // ================= DELETE FIX =================
+    void fixDelete(Node* x) {
+        while (x != root && (!x || x->colour == BLACK)) {
+            if (x == x->parent->left) {
+                Node* w = x->parent->right;
+
+                if (w && w->colour == RED) {
+                    setColour(w, BLACK);
+                    setColour(x->parent, RED);
+                    rotateLeft(x->parent);
+                    w = x->parent->right;
+                }
+
+                if (w && (!w->left || w->left->colour == BLACK) &&
+                    (!w->right || w->right->colour == BLACK)) {
+                    setColour(w, RED);
+                    x = x->parent;
+                } else if (w) {
+                    if (!w->right || w->right->colour == BLACK) {
+                        setColour(w->left, BLACK);
+                        setColour(w, RED);
+                        rotateRight(w);
+                        w = x->parent->right;
+                    }
+
+                    setColour(w, x->parent->colour);
+                    setColour(x->parent, BLACK);
+                    setColour(w->right, BLACK);
+                    rotateLeft(x->parent);
+                    x = root;
+                } else {
+                    x = x->parent;
+                }
+            } else {
+                Node* w = x->parent->left;
+
+                if (w && w->colour == RED) {
+                    setColour(w, BLACK);
+                    setColour(x->parent, RED);
+                    rotateRight(x->parent);
+                    w = x->parent->left;
+                }
+
+                if (w && (!w->left || w->left->colour == BLACK) &&
+                    (!w->right || w->right->colour == BLACK)) {
+                    setColour(w, RED);
+                    x = x->parent;
+                } else if (w) {
+                    if (!w->left || w->left->colour == BLACK) {
+                        setColour(w->right, BLACK);
+                        setColour(w, RED);
+                        rotateLeft(w);
+                        w = x->parent->left;
+                    }
+
+                    setColour(w, x->parent->colour);
+                    setColour(x->parent, BLACK);
+                    setColour(w->left, BLACK);
+                    rotateRight(x->parent);
+                    x = root;
+                } else {
+                    x = x->parent;
+                }
+            }
         }
+        if (x)
+            setColour(x, BLACK);
+    }
 
-        bool isRed() {
-            
+    // ================= DEPTH =================
+    int calcHeight(Node* n) {
+        if (!n) return -1;
+        int h = 0;
+        // Iterative height calculation using a queue or something, but for simplicity, keep recursive but warn.
+        // Actually, to fix, make it iterative.
+        // But for now, since n=100k, recursion is too deep.
+        // Let's implement iterative height.
+        if (!n) return -1;
+        std::queue<Node*> q;
+        q.push(n);
+        int height = 0;
+        while (!q.empty()) {
+            int size = q.size();
+            height++;
+            for (int i = 0; i < size; i++) {
+                Node* curr = q.front(); q.pop();
+                if (curr->left) q.push(curr->left);
+                if (curr->right) q.push(curr->right);
+            }
         }
+        return height - 1; // since we start from 0
+    }
 
-        Node* put(Node* p, K key, T data) {
-            if(!p) return new Node(key, data);
+    void inorder(Node* n) {
+        if (!n) return;
+        inorder(n->left);
+        std::cout << n->key << " ";
+        inorder(n->right);
+    }
 
-            if(key < p->key) p->left = put(p->left, key, data);
-            else if(key > p->key) p->right = put(p->right, key, data);
+    void destroy(Node* n) {
+        if (!n) return;
+        destroy(n->left);
+        destroy(n->right);
+        delete n;
+    }
 
-            return p;
-        }
+public:
+    RedBlack() : root(nullptr), nodeCount(0), rotationCount(0), colourChangeCount(0) {}
 
-        // find node with key
-        Node* find(Node* p, K key) {
-            if(!p || key == p->key) return p;
-            if(key < p->key) return find(p->left, key);
-            if(key > p->key) return find(p->right, key);
-        }
+    ~RedBlack() {
+        destroy(root);
+    }
 
-        // delete node with key
-        Node* deleteNode(Node* p, K key) {
-            if(!p) return nullptr;
-            
-            if(key < p->key) p->left = deleteNode(p->left, key);
-            else if(key > p->key) p->right = deleteNode(p->right, key);
+    void put(K key, T data) {
+        Node* z = new Node(key, data);
+        Node* y = nullptr;
+        Node* x = root;
+
+        while (x) {
+            y = x;
+            if (key < x->key)
+                x = x->left;
+            else if (key > x->key)
+                x = x->right;
             else {
-                treeSize--;
-                Node* temp;
-                if(!p->left) {
-                    temp = p->right;
-                    delete p;
-                    return temp;
-                }
+                x->data = data;
+                delete z;
+                return;
+            }
+        }
 
-                if(!p->right) {
-                    temp = p->left;
-                    delete p;
-                    return temp;
-                }
+        z->parent = y;
 
-                temp = p->right;
-                while(temp && temp->left) {
-                    temp = temp->left;
-                }
+        if (!y)
+            root = z;
+        else if (key < y->key)
+            y->left = z;
+        else
+            y->right = z;
 
-                p->key = temp->key;
-                p->data = temp->data;
-                p->right = deleteNode(p->right, temp->key);
+        nodeCount++;
+        fixInsert(z);
+    }
+
+    T* get(K key) {
+        Node* n = findNode(key);
+        return n ? &n->data : nullptr;
+    }
+
+    bool contains(K key) {
+        return findNode(key) != nullptr;
+    }
+
+    bool remove(K key) {
+        Node* z = findNode(key);
+        if (!z) return false;
+
+        Node* y = z;
+        Node* x = nullptr;
+        Colour yOriginal = y->colour;
+
+        if (!z->left) {
+            x = z->right;
+            transplant(z, z->right);
+        } else if (!z->right) {
+            x = z->left;
+            transplant(z, z->left);
+        } else {
+            y = minimum(z->right);
+            yOriginal = y->colour;
+            x = y->right;
+
+            if (y->parent == z) {
+                if (x) x->parent = y;
+            } else {
+                transplant(y, y->right);
+                y->right = z->right;
+                y->right->parent = y;
             }
 
-            return p;
+            transplant(z, y);
+            y->left = z->left;
+            y->left->parent = y;
+            setColour(y, z->colour);
         }
 
-        int height(Node* p) {
-            if(!p) return -1;
-            return std::max(height(p->left), height(p->right)) + 1;
-        }
+        delete z;
+        nodeCount--;
 
-        void inorder(Node* p) {
-            if(!p) return;
-            inorder(p->left);
-            std::cout << p->data << ' ';
-            inorder(p->right);
-        }
+        if (yOriginal == BLACK && x)
+            fixDelete(x);
 
-    public:
-        RedBlack() : root(nullptr), treeSize(0) {}
-        ~RedBlack() { destroy(root); root = nullptr; treeSize = 0; };
+        return true;
+    }
 
-        void put(K key, T data) { root = put(root, key, data); }
+    int size() {
+        return nodeCount;
+    }
 
-        T* get(K key) { 
-            Node* node = find(root, key);
-            if(node) return node->data;
-            return nullptr;
-        }
+    int height() {
+        return calcHeight(root);
+    }
 
-        bool contains(K key) { return find(root, key); }
+    bool isEmpty() {
+        return nodeCount == 0;
+    }
 
-        bool remove(K key) {
-            if(!contains(key)) return false;
-            deleteNode(key);
-            return true;
-        }
+    void printInorder() {
+        inorder(root);
+        std::cout << "\n";
+    }
 
-        int size() { return treeSize; }
+    long long getRotationCount() const {
+        return rotationCount;
+    }
 
-        int height() { return height(root); }
-
-        bool isEmpty() { return treeSize == 0; }
-
-        void printInorder() { inorder(root); std::cout << '\n';}
+    long long getColourChangeCount() const {
+        return colourChangeCount;
+    }
 };
 
 #endif

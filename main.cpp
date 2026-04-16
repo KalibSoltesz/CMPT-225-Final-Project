@@ -1,51 +1,106 @@
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <algorithm>
+#include <numeric>
+#include <random>
+#include <vector>
+#include <cmath>
+
 #include "BinarySearchTree.hpp"
+#include "AVL.hpp"
+#include "RedBlack.hpp"
+#include "LeftLeaning.hpp"
 
 using namespace std;
+using Clock = chrono::high_resolution_clock;
 
+// ================= RUN TEST =================
+template <typename Tree>
+void runTest(const vector<int>& values, const string& name) {
+    Tree tree;
+
+    // ---------- INSERT ----------
+    auto start = Clock::now();
+    for (int x : values) tree.put(x, x);
+    auto end = Clock::now();
+
+    double insertTime = chrono::duration<double, milli>(end - start).count();
+
+    // ---------- SEARCH ----------
+    start = Clock::now();
+    for (int x : values) tree.get(x);
+    end = Clock::now();
+
+    double searchTime = chrono::duration<double, milli>(end - start).count();
+
+    // ---------- METRICS (Before Delete) ----------
+    int treeHeight = tree.height();
+    
+    double heightRatio = values.size() > 0 && treeHeight >= 0
+        ? double(treeHeight) / log2(values.size())
+        : 0.0;
+
+    // ---------- DELETE ----------
+    start = Clock::now();
+    for (int x : values) tree.remove(x);
+    end = Clock::now();
+
+    double deleteTime = chrono::duration<double, milli>(end - start).count();
+
+    cout << name << ":\n";
+    cout << "  Insert time: " << insertTime << " ms\n";
+    cout << "  Search time: " << searchTime << " ms\n";
+    cout << "  Delete time: " << deleteTime << " ms\n";
+    cout << "         SIZE: " << tree.size() << '\n';
+
+    double avgRot = values.size() > 0 ? double(tree.getRotationCount()) / values.size() : 0.0;
+    cout << "  Rotations: " << tree.getRotationCount()
+            << " (avg " << avgRot << ")\n";
+
+    double avgCol = values.size() > 0 ? double(tree.getColourChangeCount()) / values.size() : 0.0;
+    cout << "  Colour changes: " << tree.getColourChangeCount()
+            << " (avg " << avgCol << ")\n";
+
+    cout << "  Height: " << treeHeight
+         << " (height/log2(n)=" << heightRatio << ")\n\n";
+}
+
+// ================= MAIN =================
 int main() {
+    vector<int> sizes = {10000, 50000, 100000};
+    mt19937_64 rng(42);
 
-    AVL<int, int> tree;
+    cout << fixed << setprecision(3);
 
-    for(int i = 0; i < 100; i++) {
-        int temp = rand() % 1000;
-        tree.put(temp, temp);
+    for (int n : sizes) {
+        cout << "========================================\n";
+        cout << "SIZE: " << n << "\n";
+        cout << "========================================\n\n";
+
+        // ================= RANDOM INPUT =================
+        vector<int> randomValues(n);
+        iota(randomValues.begin(), randomValues.end(), 0);
+        shuffle(randomValues.begin(), randomValues.end(), rng);
+
+        cout << "----- RANDOM INPUT -----\n\n";
+
+        runTest<BST<int, int>>(randomValues, "Standard BST");
+        runTest<AVL<int, int>>(randomValues, "AVL Tree");
+        runTest<RedBlack<int, int>>(randomValues, "Red-Black Tree");
+        runTest<LLRB<int, int>>(randomValues, "Left-Leaning RB Tree");
+
+        // ================= SORTED INPUT =================
+        vector<int> sortedValues(n);
+        iota(sortedValues.begin(), sortedValues.end(), 0);
+
+        cout << "----- SORTED INPUT (Worst Case BST) -----\n\n";
+
+        runTest<BST<int, int>>(sortedValues, "Standard BST");
+        runTest<AVL<int, int>>(sortedValues, "AVL Tree");
+        runTest<RedBlack<int, int>>(sortedValues, "Red-Black Tree");
+        runTest<LLRB<int, int>>(sortedValues, "Left-Leaning RB Tree");
     }
-
-    tree.printInorder();
-
-    // while (true) {
-    //     int input;
-    //     int key;
-    //     cout << "\n(1) search\n(2) delete\n(3) insert\n(4) print inorder\n(5) exit\n\nInput: ";
-    //     cin >> input;
-
-    //     if(input != 4) {
-    //         cout << "Key: ";
-    //         cin >> key;
-    //     }
-
-    //     switch (input) {
-    //         // insert
-    //         case 1:
-    //             break;
-            
-    //         // search
-    //         case 2:
-    //             break;
-
-    //         // delete
-    //         case 3:
-    //             break;
-
-    //         // print inorder
-    //         case 4:
-    //             break;
-            
-    //         // exit
-    //         case 5:
-    //             return 0;
-    //     }
-    // }
 
     return 0;
 }

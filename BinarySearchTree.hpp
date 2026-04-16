@@ -2,189 +2,194 @@
 #define BST_HPP
 
 #include <iostream>
+#include <queue>
+#include <utility>
 
-// K must be comparable
-template<typename K, typename T>
-class AVL {
-    private:
+template <typename K, typename T>
+class BST {
+private:
 
-        // node structure
-        struct Node {
-            K key;
-            T data;
-            Node* left;
-            Node* right;
-            Node* parent;
-            
-            Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr) {}
-        };
+    struct Node {
+        K key;
+        T data;
+        Node* left;
+        Node* right;
+        Node* parent;
 
-        Node* root;
-        int treeSize;
+        Node(K k, T x)
+            : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr) {}
+    };
 
-        // destroy subtree starting at p recursively
-        void destroy(Node* p) {
-            if(!p) return;
-            destroy(p->left);
-            destroy(p->right);
-            delete p;
+    Node* root;
+    int nodeCount;
+
+    // ================= HELPERS =================
+
+    Node* findNode(K key) const {
+        Node* cur = root;
+        while (cur) {
+            if (key < cur->key)
+                cur = cur->left;
+            else if (key > cur->key)
+                cur = cur->right;
+            else
+                return cur;
         }
+        return nullptr;
+    }
 
-        // recursive insertion function
-        Node* put(Node* p, K key, T data) {
-            if(!p) {
-                treeSize++;
-                return new Node(key, data);
-            }
+    Node* minimum(Node* n) {
+        while (n && n->left)
+            n = n->left;
+        return n;
+    }
 
-            if(key < p->key) {
-                p->left = put(p->left, key, data);
-                p->left->parent = p;
-            }
-            else if(key > p->key) {
-                p->right = put(p->right, key, data);
-                p->right->parent = p;
-            }
+    void transplant(Node* u, Node* v) {
+        if (!u->parent)
+            root = v;
+        else if (u == u->parent->left)
+            u->parent->left = v;
+        else
+            u->parent->right = v;
 
-            return p;
+        if (v)
+            v->parent = u->parent;
+    }
+
+    void inorder(Node* n) {
+        if (!n) return;
+        inorder(n->left);
+        std::cout << n->key << " ";
+        inorder(n->right);
+    }
+
+    int calcHeight(Node* n) {
+        if (!n) return -1;
+        std::queue<Node*> q;
+        q.push(n);
+        int height = 0;
+        while (!q.empty()) {
+            int size = q.size();
+            height++;
+            for (int i = 0; i < size; i++) {
+                Node* curr = q.front(); q.pop();
+                if (curr->left) q.push(curr->left);
+                if (curr->right) q.push(curr->right);
+            }
         }
+        return height - 1;
+    }
 
-        // recursive find function
-        Node* find(Node* p, K key) {
-            if(!p || key == p->key) return p;
-            if(key < p->key) return find(p->left, key);
-            if(key > p->key) return find(p->right, key);
-        }
+    void destroy(Node* n) {
+        if (!n) return;
+        destroy(n->left);
+        destroy(n->right);
+        delete n;
+    }
 
-        // recursive deletion function
-        Node* deleteNode(Node* p, K key) {
-            if(!p) return nullptr;
-            
-            if(key < p->key) p->left = deleteNode(p->left, key);
-            else if(key > p->key) p->right = deleteNode(p->right, key);
+public:
+    BST() : root(nullptr), nodeCount(0) {}
+
+    ~BST() {
+        destroy(root);
+    }
+
+    // ================= INSERT =================
+
+    void put(K key, T data) {
+        Node* z = new Node(key, data);
+
+        Node* y = nullptr;
+        Node* x = root;
+
+        while (x) {
+            y = x;
+            if (key < x->key)
+                x = x->left;
+            else if (key > x->key)
+                x = x->right;
             else {
-                treeSize--;
-                Node* temp;
+                // overwrite existing
+                x->data = data;
+                delete z;
+                return;
+            }
+        }
 
-                if(!p->left) {
-                    temp = p->right;
-                    temp->parent = p->parent;
-                    delete p;
-                    return temp;
-                }
+        z->parent = y;
 
-                if(!p->right) {
-                    temp = p->left;
-                    temp->parent = p->parent;
-                    delete p;
-                    return temp;
-                }
+        if (!y)
+            root = z;
+        else if (key < y->key)
+            y->left = z;
+        else
+            y->right = z;
 
-                temp = p->right;
-                while(temp && temp->left) {
-                    temp = temp->left;
-                }
+        nodeCount++;
+    }
 
-                p->key = temp->key;
-                p->data = temp->data;
-                p->right = deleteNode(p->right, temp->key);
+    // ================= SEARCH =================
+
+    T* get(K key) {
+        Node* n = findNode(key);
+        return n ? &n->data : nullptr;
+    }
+
+    bool contains(K key) {
+        return findNode(key) != nullptr;
+    }
+
+    // ================= DELETE =================
+
+    bool remove(K key) {
+        Node* z = findNode(key);
+        if (!z) return false;
+
+        if (!z->left) {
+            transplant(z, z->right);
+        } else if (!z->right) {
+            transplant(z, z->left);
+        } else {
+            Node* y = minimum(z->right);
+
+            if (y->parent != z) {
+                transplant(y, y->right);
+                y->right = z->right;
+                y->right->parent = y;
             }
 
-            return p;
+            transplant(z, y);
+            y->left = z->left;
+            y->left->parent = y;
         }
 
-        // recursive height function
-        int height(Node* p) {
-            if(!p) return -1;
-            return std::max(height(p->left), height(p->right)) + 1;
-        }
+        delete z;
+        nodeCount--;
+        return true;
+    }
 
-        // recursive printing functions
-        void inorder(Node* p) {
-            if(!p) return;
-            inorder(p->left);
-            std::cout << p->data << ' ';
-            inorder(p->right);
-        }
+    // ================= STATS =================
 
-        void preorder(Node* p) {
-            if(!p) return;
-            std::cout << p->data << ' ';
-            preorder(p->left);
-            preorder(p->right);
-        }
+    int size() {
+        return nodeCount;
+    }
 
-        void postorder(Node* p) {
-            if(!p) return;
-            std::coiut << p->data << ' ';
-            postorder(p->left);
-            postorder(p->right);
-        }
+    int height() {
+        return calcHeight(root);
+    }
 
-    public:
-        // constructor & destructor
-        AVL() : root(nullptr), treeSize(0) {}
-        ~AVL() { destroy(root); root = nullptr; treeSize = 0; };
+    bool isEmpty() {
+        return nodeCount == 0;
+    }
 
-        // insert new node
-        void put(K key, T data) { root = put(root, key, data); }
+    void printInorder() {
+        inorder(root);
+        std::cout << "\n";
+    }
 
-        // get data from node with key
-        T* get(K key) { 
-            Node* node = find(root, key);
-            if(node) return node->data;
-            return nullptr;
-        }
-        
-        // remove a node with key
-        bool remove(K key) {
-            if(!contains(key)) return false;
-            deleteNode(key);
-            return true;
-        }
+    long long getRotationCount() const { return 0; }
 
-        // find the smallest key
-        K* findMin() {
-            if(!root) return nullptr;
-            Node* curr = root;
-            while(curr->left) curr = curr->left;
-            return &(curr->key);
-        }
-
-        // find the largest key
-        K* findMax() {
-            if(!root) return nullptr;
-            Node* curr = root;
-            while(curr->right) curr = curr->right;
-            return &(curr->key);
-        }
-
-        // -1 if not found
-        int getHeight(K key) { return height(find(root, key)); }
-
-        int depth(K key) {
-            int count = 0;
-            Node* curr = find(root, key);
-            while(curr->parent) {
-                curr = curr->parent;
-                count++;
-            }
-            return count;
-        }
-
-        bool contains(K key) { return find(root, key); }
-
-        int size() { return treeSize; }
-
-        int treeHeight() { return height(root); }
-
-        bool isEmpty() { return treeSize == 0; }
-
-        void printInorder() { inorder(root); std::cout << '\n'; }
-
-        void printPreorder() { preorder(root); std::cout << '\n'; }
-
-        void printPostorder() { postorder(root); std::cout << '\n'; }
+    long long getColourChangeCount() const { return 0; }
 };
 
 #endif
