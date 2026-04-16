@@ -36,6 +36,8 @@ void runTest(const vector<int>& values, const string& name) {
 
     // ---------- METRICS (Before Delete) ----------
     int treeHeight = tree.height();
+    long long insertRotations = tree.getRotationCount();
+    long long insertColourChanges = tree.getColourChangeCount();
     
     double heightRatio = values.size() > 0 && treeHeight >= 0
         ? double(treeHeight) / log2(values.size())
@@ -48,19 +50,32 @@ void runTest(const vector<int>& values, const string& name) {
 
     double deleteTime = chrono::duration<double, milli>(end - start).count();
 
+    long long totalRotations = tree.getRotationCount();
+    long long deleteRotations = totalRotations - insertRotations;
+    
+    long long totalColourChanges = tree.getColourChangeCount();
+    long long deleteColourChanges = totalColourChanges - insertColourChanges;
+
     cout << name << ":\n";
     cout << "  Insert time: " << insertTime << " ms\n";
     cout << "  Search time: " << searchTime << " ms\n";
     cout << "  Delete time: " << deleteTime << " ms\n";
-    cout << "         SIZE: " << tree.size() << '\n';
 
-    double avgRot = values.size() > 0 ? double(tree.getRotationCount()) / values.size() : 0.0;
-    cout << "  Rotations: " << tree.getRotationCount()
-            << " (avg " << avgRot << ")\n";
+    double avgInsertRot = values.size() > 0 ? double(insertRotations) / values.size() : 0.0;
+    cout << "  Insert rotations: " << insertRotations
+            << " (avg " << avgInsertRot << ")\n";
 
-    double avgCol = values.size() > 0 ? double(tree.getColourChangeCount()) / values.size() : 0.0;
-    cout << "  Colour changes: " << tree.getColourChangeCount()
-            << " (avg " << avgCol << ")\n";
+    double avgDeleteRot = values.size() > 0 ? double(deleteRotations) / values.size() : 0.0;
+    cout << "  Delete rotations: " << deleteRotations
+            << " (avg " << avgDeleteRot << ")\n";
+
+    double avgInsertCol = values.size() > 0 ? double(insertColourChanges) / values.size() : 0.0;
+    cout << "  Insert colour changes: " << insertColourChanges
+            << " (avg " << avgInsertCol << ")\n";
+
+    double avgDeleteCol = values.size() > 0 ? double(deleteColourChanges) / values.size() : 0.0;
+    cout << "  Delete colour changes: " << deleteColourChanges
+            << " (avg " << avgDeleteCol << ")\n";
 
     cout << "  Height: " << treeHeight
          << " (height/log2(n)=" << heightRatio << ")\n\n";
