@@ -113,11 +113,6 @@ private:
         return balance(n);
     }
 
-    Node* minimum(Node* n) {
-        while (n && n->left) n = n->left;
-        return n;
-    }
-
     Node* findNode(K key) const {
         Node* cur = root;
         while (cur) {
@@ -162,14 +157,6 @@ public:
 
     bool contains(K key) { return findNode(key) != nullptr; }
 
-    // ================= DELETE =================
-
-    bool remove(K key) {
-        if (!contains(key)) return false;
-        root = removeNode(root, key);
-        return true;
-    }
-
     // ================= STATS =================
 
     int size() const { return nodeCount; }
@@ -187,8 +174,22 @@ public:
 
     long long getColourChangeCount() const { return 0; }
 
+
+
+    // ==================== DELETION ====================
+
+    bool remove(K key) {
+        if (!contains(key)) return false;
+        root = removeNode(root, key);
+        return true;
+    }
+
 private:
-    // ================= DELETION =================
+    Node* minimum(Node* n) {
+        while (n && n->left) n = n->left;
+        return n;
+    }
+
     Node* removeNode(Node* n, K key) {
         if (!n) return nullptr;
 

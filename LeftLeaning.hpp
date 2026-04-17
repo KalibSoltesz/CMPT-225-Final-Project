@@ -143,18 +143,6 @@ public:
         setColour(root, BLACK);
     }
 
-    bool remove(K key) {
-        if (!contains(key)) return false;
-
-        if (!isRed(root->left) && !isRed(root->right)) setColour(root, RED);
-
-        root = remove(root, key);
-
-        if (root) setColour(root, BLACK);
-
-        return true;
-    }
-
     T* get(K key) {
         Node* n = find(root, key);
         return n ? &n->data : nullptr;
@@ -177,8 +165,23 @@ public:
 
     long long getColourChangeCount() const { return colourChangeCount; }
 
+
+
+    // ==================== DELETION ====================
+
+    bool remove(K key) {
+        if (!contains(key)) return false;
+
+        if (!isRed(root->left) && !isRed(root->right)) setColour(root, RED);
+
+        root = remove(root, key);
+
+        if (root) setColour(root, BLACK);
+
+        return true;
+    }
+
 private:
-    // ================= DELETION =================
     Node* moveRedLeft(Node* h) {
         flipColours(h);
 

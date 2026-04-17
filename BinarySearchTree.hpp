@@ -39,14 +39,6 @@ private:
         return n;
     }
 
-    void transplant(Node* u, Node* v) {
-        if (!u->parent) root = v;
-        else if (u == u->parent->left) u->parent->left = v;
-        else u->parent->right = v;
-
-        if (v) v->parent = u->parent;
-    }
-
     void inorder(Node* n) {
         if (!n) return;
         inorder(n->left);
@@ -121,7 +113,26 @@ public:
 
     bool contains(K key) { return findNode(key) != nullptr; }
 
-    // ================= DELETE =================
+    // ================= STATS =================
+
+    int size() { return nodeCount; }
+
+    int height() { return calcHeight(root); }
+
+    bool isEmpty() { return nodeCount == 0; }
+
+    void printInorder() {
+        inorder(root);
+        std::cout << "\n";
+    }
+
+    long long getRotationCount() const { return 0; }
+
+    long long getColourChangeCount() const { return 0; }
+
+
+    
+    // ==================== DELETION ====================
 
     bool remove(K key) {
         Node* z = findNode(key);
@@ -148,22 +159,14 @@ public:
         return true;
     }
 
-    // ================= STATS =================
+private:
+    void transplant(Node* u, Node* v) {
+        if (!u->parent) root = v;
+        else if (u == u->parent->left) u->parent->left = v;
+        else u->parent->right = v;
 
-    int size() { return nodeCount; }
-
-    int height() { return calcHeight(root); }
-
-    bool isEmpty() { return nodeCount == 0; }
-
-    void printInorder() {
-        inorder(root);
-        std::cout << "\n";
+        if (v) v->parent = u->parent;
     }
-
-    long long getRotationCount() const { return 0; }
-
-    long long getColourChangeCount() const { return 0; }
 };
 
 #endif

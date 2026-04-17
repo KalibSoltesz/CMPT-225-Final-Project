@@ -146,7 +146,7 @@ void writeCSV(const vector<TestResult>& results, const string& filename) {
     }
 
     file.close();
-    cout << "\n✓ Results exported to " << filename << "\n";
+    cout << "\nResults exported to " << filename << "\n";
 }
 
 // ================= MAIN =================

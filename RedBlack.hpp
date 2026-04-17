@@ -128,27 +128,8 @@ private:
         return nullptr;
     }
 
-    // ================= MIN =================
-    Node* minimum(Node* n) {
-        while (n->left) n = n->left;
-        return n;
-    }
-
-    // ================= TRANSPLANT =================
-    void transplant(Node* u, Node* v) {
-        if (!u->parent) root = v;
-        else if (u == u->parent->left) u->parent->left = v;
-        else u->parent->right = v;
-
-        if (v) v->parent = u->parent;
-    }
-
-
-
     // ================= DEPTH =================
     int calcHeight(Node* n) {
-        if (!n) return -1;
-        int h = 0;
         if (!n) return -1;
         std::queue<Node*> q;
         q.push(n);
@@ -217,6 +198,25 @@ public:
 
     bool contains(K key) { return findNode(key) != nullptr; }
 
+    int size() { return nodeCount; }
+
+    int height() { return calcHeight(root); }
+
+    bool isEmpty() { return nodeCount == 0; }
+
+    void printInorder() {
+        inorder(root);
+        std::cout << "\n";
+    }
+
+    long long getRotationCount() const { return rotationCount; }
+
+    long long getColourChangeCount() const { return colourChangeCount; }
+
+
+
+    // ==================== DELETION ====================
+
     bool remove(K key) {
         Node* z = findNode(key);
         if (!z) return false;
@@ -256,29 +256,25 @@ public:
         delete z;
         nodeCount--;
 
-        if (yOriginal == BLACK && x)
-            fixDelete(x);
+        if (yOriginal == BLACK && x) fixDelete(x);
 
         return true;
     }
 
-    int size() { return nodeCount; }
-
-    int height() { return calcHeight(root); }
-
-    bool isEmpty() { return nodeCount == 0; }
-
-    void printInorder() {
-        inorder(root);
-        std::cout << "\n";
+private:
+    Node* minimum(Node* n) {
+        while (n->left) n = n->left;
+        return n;
     }
 
-    long long getRotationCount() const { return rotationCount; }
+    void transplant(Node* u, Node* v) {
+        if (!u->parent) root = v;
+        else if (u == u->parent->left) u->parent->left = v;
+        else u->parent->right = v;
 
-    long long getColourChangeCount() const { return colourChangeCount; }
+        if (v) v->parent = u->parent;
+    }
 
-private:
-    // ================= DELETION =================
     void fixDelete(Node* x) {
         while (x != root && (!x || x->colour == BLACK)) {
             bool isLeft = (x == x->parent->left);
