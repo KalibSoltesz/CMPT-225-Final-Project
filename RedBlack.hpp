@@ -17,8 +17,7 @@ private:
         Node* parent;
         Colour colour;
 
-        Node(K k, T x)
-            : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr), colour(RED) {}
+        Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr), colour(RED) {}
     };
 
     Node* root;
@@ -32,17 +31,13 @@ private:
         Node* y = x->right;
         x->right = y->left;
 
-        if (y->left)
-            y->left->parent = x;
+        if (y->left) y->left->parent = x;
 
         y->parent = x->parent;
 
-        if (!x->parent)
-            root = y;
-        else if (x == x->parent->left)
-            x->parent->left = y;
-        else
-            x->parent->right = y;
+        if (!x->parent) root = y;
+        else if (x == x->parent->left) x->parent->left = y;
+        else x->parent->right = y;
 
         y->left = x;
         x->parent = y;
@@ -54,17 +49,13 @@ private:
         Node* x = y->left;
         y->left = x->right;
 
-        if (x->right)
-            x->right->parent = y;
+        if (x->right) x->right->parent = y;
 
         x->parent = y->parent;
 
-        if (!y->parent)
-            root = x;
-        else if (y == y->parent->left)
-            y->parent->left = x;
-        else
-            y->parent->right = x;
+        if (!y->parent) root = x;
+        else if (y == y->parent->left) y->parent->left = x;
+        else y->parent->right = x;
 
         x->right = y;
         y->parent = x;
@@ -92,7 +83,8 @@ private:
                     setColour(y, BLACK);
                     setColour(gp, RED);
                     z = gp;
-                } else {
+                }
+                else {
                     if (z == z->parent->right) {
                         z = z->parent;
                         rotateLeft(z);
@@ -101,7 +93,8 @@ private:
                     setColour(gp, RED);
                     rotateRight(gp);
                 }
-            } else {
+            }
+            else {
                 Node* y = gp->left;
 
                 if (y && y->colour == RED) {
@@ -109,7 +102,8 @@ private:
                     setColour(y, BLACK);
                     setColour(gp, RED);
                     z = gp;
-                } else {
+                }
+                else {
                     if (z == z->parent->left) {
                         z = z->parent;
                         rotateRight(z);
@@ -127,113 +121,34 @@ private:
     Node* findNode(K key) const {
         Node* cur = root;
         while (cur) {
-            if (key < cur->key)
-                cur = cur->left;
-            else if (key > cur->key)
-                cur = cur->right;
-            else
-                return cur;
+            if (key < cur->key) cur = cur->left;
+            else if (key > cur->key) cur = cur->right;
+            else return cur;
         }
         return nullptr;
     }
 
     // ================= MIN =================
     Node* minimum(Node* n) {
-        while (n->left)
-            n = n->left;
+        while (n->left) n = n->left;
         return n;
     }
 
     // ================= TRANSPLANT =================
     void transplant(Node* u, Node* v) {
-        if (!u->parent)
-            root = v;
-        else if (u == u->parent->left)
-            u->parent->left = v;
-        else
-            u->parent->right = v;
+        if (!u->parent) root = v;
+        else if (u == u->parent->left) u->parent->left = v;
+        else u->parent->right = v;
 
-        if (v)
-            v->parent = u->parent;
+        if (v) v->parent = u->parent;
     }
 
-    // ================= DELETE FIX =================
-    void fixDelete(Node* x) {
-        while (x != root && (!x || x->colour == BLACK)) {
-            if (x == x->parent->left) {
-                Node* w = x->parent->right;
 
-                if (w && w->colour == RED) {
-                    setColour(w, BLACK);
-                    setColour(x->parent, RED);
-                    rotateLeft(x->parent);
-                    w = x->parent->right;
-                }
-
-                if (w && (!w->left || w->left->colour == BLACK) &&
-                    (!w->right || w->right->colour == BLACK)) {
-                    setColour(w, RED);
-                    x = x->parent;
-                } else if (w) {
-                    if (!w->right || w->right->colour == BLACK) {
-                        setColour(w->left, BLACK);
-                        setColour(w, RED);
-                        rotateRight(w);
-                        w = x->parent->right;
-                    }
-
-                    setColour(w, x->parent->colour);
-                    setColour(x->parent, BLACK);
-                    setColour(w->right, BLACK);
-                    rotateLeft(x->parent);
-                    x = root;
-                } else {
-                    x = x->parent;
-                }
-            } else {
-                Node* w = x->parent->left;
-
-                if (w && w->colour == RED) {
-                    setColour(w, BLACK);
-                    setColour(x->parent, RED);
-                    rotateRight(x->parent);
-                    w = x->parent->left;
-                }
-
-                if (w && (!w->left || w->left->colour == BLACK) &&
-                    (!w->right || w->right->colour == BLACK)) {
-                    setColour(w, RED);
-                    x = x->parent;
-                } else if (w) {
-                    if (!w->left || w->left->colour == BLACK) {
-                        setColour(w->right, BLACK);
-                        setColour(w, RED);
-                        rotateLeft(w);
-                        w = x->parent->left;
-                    }
-
-                    setColour(w, x->parent->colour);
-                    setColour(x->parent, BLACK);
-                    setColour(w->left, BLACK);
-                    rotateRight(x->parent);
-                    x = root;
-                } else {
-                    x = x->parent;
-                }
-            }
-        }
-        if (x)
-            setColour(x, BLACK);
-    }
 
     // ================= DEPTH =================
     int calcHeight(Node* n) {
         if (!n) return -1;
         int h = 0;
-        // Iterative height calculation using a queue or something, but for simplicity, keep recursive but warn.
-        // Actually, to fix, make it iterative.
-        // But for now, since n=100k, recursion is too deep.
-        // Let's implement iterative height.
         if (!n) return -1;
         std::queue<Node*> q;
         q.push(n);
@@ -267,9 +182,7 @@ private:
 public:
     RedBlack() : root(nullptr), nodeCount(0), rotationCount(0), colourChangeCount(0) {}
 
-    ~RedBlack() {
-        destroy(root);
-    }
+    ~RedBlack() { destroy(root); }
 
     void put(K key, T data) {
         Node* z = new Node(key, data);
@@ -278,10 +191,8 @@ public:
 
         while (x) {
             y = x;
-            if (key < x->key)
-                x = x->left;
-            else if (key > x->key)
-                x = x->right;
+            if (key < x->key) x = x->left;
+            else if (key > x->key) x = x->right;
             else {
                 x->data = data;
                 delete z;
@@ -291,12 +202,9 @@ public:
 
         z->parent = y;
 
-        if (!y)
-            root = z;
-        else if (key < y->key)
-            y->left = z;
-        else
-            y->right = z;
+        if (!y) root = z;
+        else if (key < y->key) y->left = z;
+        else y->right = z;
 
         nodeCount++;
         fixInsert(z);
@@ -307,9 +215,7 @@ public:
         return n ? &n->data : nullptr;
     }
 
-    bool contains(K key) {
-        return findNode(key) != nullptr;
-    }
+    bool contains(K key) { return findNode(key) != nullptr; }
 
     bool remove(K key) {
         Node* z = findNode(key);
@@ -322,17 +228,20 @@ public:
         if (!z->left) {
             x = z->right;
             transplant(z, z->right);
-        } else if (!z->right) {
+        }
+        else if (!z->right) {
             x = z->left;
             transplant(z, z->left);
-        } else {
+        }
+        else {
             y = minimum(z->right);
             yOriginal = y->colour;
             x = y->right;
 
             if (y->parent == z) {
                 if (x) x->parent = y;
-            } else {
+            }
+            else {
                 transplant(y, y->right);
                 y->right = z->right;
                 y->right->parent = y;
@@ -353,29 +262,63 @@ public:
         return true;
     }
 
-    int size() {
-        return nodeCount;
-    }
+    int size() { return nodeCount; }
 
-    int height() {
-        return calcHeight(root);
-    }
+    int height() { return calcHeight(root); }
 
-    bool isEmpty() {
-        return nodeCount == 0;
-    }
+    bool isEmpty() { return nodeCount == 0; }
 
     void printInorder() {
         inorder(root);
         std::cout << "\n";
     }
 
-    long long getRotationCount() const {
-        return rotationCount;
-    }
+    long long getRotationCount() const { return rotationCount; }
 
-    long long getColourChangeCount() const {
-        return colourChangeCount;
+    long long getColourChangeCount() const { return colourChangeCount; }
+
+private:
+    // ================= DELETION =================
+    void fixDelete(Node* x) {
+        while (x != root && (!x || x->colour == BLACK)) {
+            bool isLeft = (x == x->parent->left);
+            Node* w = isLeft ? x->parent->right : x->parent->left;
+
+            if (w && w->colour == RED) {
+                setColour(w, BLACK);
+                setColour(x->parent, RED);
+                if (isLeft) rotateLeft(x->parent);
+                else rotateRight(x->parent);
+                w = isLeft ? x->parent->right : x->parent->left;
+            }
+
+            if (w && (!w->left || w->left->colour == BLACK) &&
+                (!w->right || w->right->colour == BLACK)) {
+                setColour(w, RED);
+                x = x->parent;
+            } else if (w) {
+                Node* inner = isLeft ? w->right : w->left;
+                if (!inner || inner->colour == BLACK) {
+                    Node* outer = isLeft ? w->left : w->right;
+                    setColour(outer, BLACK);
+                    setColour(w, RED);
+                    if (isLeft) rotateRight(w);
+                    else rotateLeft(w);
+                    w = isLeft ? x->parent->right : x->parent->left;
+                }
+
+                setColour(w, x->parent->colour);
+                setColour(x->parent, BLACK);
+                Node* child = isLeft ? w->right : w->left;
+                setColour(child, BLACK);
+                if (isLeft) rotateLeft(x->parent);
+                else rotateRight(x->parent);
+                x = root;
+            } else {
+                x = x->parent;
+            }
+        }
+        if (x) setColour(x, BLACK);
     }
 };
 

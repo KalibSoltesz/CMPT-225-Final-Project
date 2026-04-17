@@ -17,8 +17,7 @@ private:
         Node* right;
         Colour colour;
 
-        Node(K k, T x)
-            : key(k), data(x), left(nullptr), right(nullptr), colour(RED) {}
+        Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), colour(RED) {}
     };
 
     Node* root;
@@ -78,112 +77,17 @@ private:
             return new Node(key, data);
         }
 
-        if (key < h->key)
-            h->left = insert(h->left, key, data);
-        else if (key > h->key)
-            h->right = insert(h->right, key, data);
-        else
-            h->data = data;
+        if (key < h->key) h->left = insert(h->left, key, data);
+        else if (key > h->key) h->right = insert(h->right, key, data);
+        else h->data = data;
 
-        if (isRed(h->right) && !isRed(h->left))
-            h = rotateLeft(h);
+        if (isRed(h->right) && !isRed(h->left)) h = rotateLeft(h);
 
-        if (isRed(h->left) && isRed(h->left->left))
-            h = rotateRight(h);
-
-        if (isRed(h->left) && isRed(h->right))
-            flipColours(h);
+        if (isRed(h->left) && isRed(h->left->left)) h = rotateRight(h);
+        
+        if (isRed(h->left) && isRed(h->right)) flipColours(h);
 
         return h;
-    }
-
-    // ================= DELETE HELPERS =================
-    Node* moveRedLeft(Node* h) {
-        flipColours(h);
-
-        if (isRed(h->right->left)) {
-            h->right = rotateRight(h->right);
-            h = rotateLeft(h);
-            flipColours(h);
-        }
-        return h;
-    }
-
-    Node* moveRedRight(Node* h) {
-        flipColours(h);
-
-        if (isRed(h->left->left)) {
-            h = rotateRight(h);
-            flipColours(h);
-        }
-        return h;
-    }
-
-    Node* fixUp(Node* h) {
-        if (isRed(h->right))
-            h = rotateLeft(h);
-
-        if (isRed(h->left) && isRed(h->left->left))
-            h = rotateRight(h);
-
-        if (isRed(h->left) && isRed(h->right))
-            flipColours(h);
-
-        return h;
-    }
-
-    Node* min(Node* h) {
-        while (h->left) h = h->left;
-        return h;
-    }
-
-    Node* deleteMin(Node* h) {
-        if (!h->left) {
-            delete h;
-            nodeCount--;
-            return nullptr;
-        }
-
-        if (!isRed(h->left) && !isRed(h->left->left))
-            h = moveRedLeft(h);
-
-        h->left = deleteMin(h->left);
-        return fixUp(h);
-    }
-
-    Node* remove(Node* h, K key) {
-        if (key < h->key) {
-            if (h->left) {
-                if (!isRed(h->left) && !isRed(h->left->left))
-                    h = moveRedLeft(h);
-                h->left = remove(h->left, key);
-            }
-        } else {
-            if (isRed(h->left))
-                h = rotateRight(h);
-
-            if (key == h->key && !h->right) {
-                delete h;
-                nodeCount--;
-                return nullptr;
-            }
-
-            if (h->right) {
-                if (!isRed(h->right) && !isRed(h->right->left))
-                    h = moveRedRight(h);
-
-                if (key == h->key) {
-                    Node* x = min(h->right);
-                    h->key = x->key;
-                    h->data = x->data;
-                    h->right = deleteMin(h->right);
-                } else {
-                    h->right = remove(h->right, key);
-                }
-            }
-        }
-
-        return fixUp(h);
     }
 
     // ================= SEARCH =================
@@ -242,13 +146,11 @@ public:
     bool remove(K key) {
         if (!contains(key)) return false;
 
-        if (!isRed(root->left) && !isRed(root->right))
-            setColour(root, RED);
+        if (!isRed(root->left) && !isRed(root->right)) setColour(root, RED);
 
         root = remove(root, key);
 
-        if (root)
-            setColour(root, BLACK);
+        if (root) setColour(root, BLACK);
 
         return true;
     }
@@ -258,9 +160,7 @@ public:
         return n ? &n->data : nullptr;
     }
 
-    bool contains(K key) {
-        return find(root, key) != nullptr;
-    }
+    bool contains(K key) { return find(root, key) != nullptr; }
 
     int size() { return nodeCount; }
 
@@ -276,6 +176,82 @@ public:
     long long getRotationCount() const { return rotationCount; }
 
     long long getColourChangeCount() const { return colourChangeCount; }
+
+private:
+    // ================= DELETION =================
+    Node* moveRedLeft(Node* h) {
+        flipColours(h);
+
+        if (isRed(h->right->left)) {
+            h->right = rotateRight(h->right);
+            h = rotateLeft(h);
+            flipColours(h);
+        }
+        return h;
+    }
+
+    Node* moveRedRight(Node* h) {
+        flipColours(h);
+
+        if (isRed(h->left->left)) {
+            h = rotateRight(h);
+            flipColours(h);
+        }
+        return h;
+    }
+
+    Node* fixUp(Node* h) {
+        if (isRed(h->right)) h = rotateLeft(h);
+
+        if (isRed(h->left) && isRed(h->left->left)) h = rotateRight(h);
+
+        if (isRed(h->left) && isRed(h->right)) flipColours(h);
+
+        return h;
+    }
+
+    Node* deleteMin(Node* h) {
+        if (!h->left) {
+            delete h;
+            nodeCount--;
+            return nullptr;
+        }
+
+        if (!isRed(h->left) && !isRed(h->left->left)) h = moveRedLeft(h);
+
+        h->left = deleteMin(h->left);
+        return fixUp(h);
+    }
+
+    Node* remove(Node* h, K key) {
+        if (key < h->key) {
+            if (h->left && !isRed(h->left) && !isRed(h->left->left)) h = moveRedLeft(h);
+            h->left = remove(h->left, key);
+            return fixUp(h);
+        }
+
+        if (isRed(h->left)) h = rotateRight(h);
+
+        if (h->right && !isRed(h->right) && !isRed(h->right->left)) h = moveRedRight(h);
+
+        if (key == h->key) {
+            if (!h->right) {
+                delete h;
+                nodeCount--;
+                return nullptr;
+            }
+            Node* x = h->right;
+            while (x->left) x = x->left;
+            h->key = x->key;
+            h->data = x->data;
+            h->right = deleteMin(h->right);
+        } 
+        else {
+            h->right = remove(h->right, key);
+        }
+
+        return fixUp(h);
+    }
 };
 
 #endif

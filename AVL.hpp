@@ -14,9 +14,7 @@ private:
         Node* parent;
         int height;
 
-        Node(K k, T x)
-            : key(k), data(x), left(nullptr), right(nullptr),
-              parent(nullptr), height(0) {}
+        Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr), height(0) {}
     };
 
     Node* root;
@@ -25,13 +23,10 @@ private:
 
     // ================= HELPERS =================
 
-    int calcHeight(Node* n) const {
-        return n ? n->height : -1;
-    }
+    int calcHeight(Node* n) const { return n ? n->height : -1; }
 
     void updateHeight(Node* n) {
-        if (n)
-            n->height = 1 + std::max(calcHeight(n->left), calcHeight(n->right));
+        if (n) n->height = 1 + std::max(calcHeight(n->left), calcHeight(n->right));
     }
 
     int getBalance(Node* n) const {
@@ -84,15 +79,15 @@ private:
         int bf = getBalance(n);
 
         if (bf > 1) {
-            if (getBalance(n->left) < 0)
-                n->left = rotateLeft(n->left);
+            if (getBalance(n->left) < 0) n->left = rotateLeft(n->left);
             return rotateRight(n);
         }
+
         if (bf < -1) {
-            if (getBalance(n->right) > 0)
-                n->right = rotateRight(n->right);
+            if (getBalance(n->right) > 0) n->right = rotateRight(n->right);
             return rotateLeft(n);
         }
+
         return n;
     }
 
@@ -105,10 +100,12 @@ private:
         if (key < n->key) {
             n->left = insert(n->left, key, data);
             n->left->parent = n;
-        } else if (key > n->key) {
+        }
+        else if (key > n->key) {
             n->right = insert(n->right, key, data);
             n->right->parent = n;
-        } else {
+        }
+        else {
             n->data = data;
             return n;
         }
@@ -117,33 +114,8 @@ private:
     }
 
     Node* minimum(Node* n) {
-        while (n && n->left)
-            n = n->left;
+        while (n && n->left) n = n->left;
         return n;
-    }
-
-    Node* removeNode(Node* n, K key) {
-        if (!n) return nullptr;
-
-        if (key < n->key)
-            n->left = removeNode(n->left, key);
-        else if (key > n->key)
-            n->right = removeNode(n->right, key);
-        else {
-            if (!n->left || !n->right) {
-                nodeCount--;
-                Node* temp = n->left ? n->left : n->right;
-                delete n;
-                return temp;
-            }
-
-            Node* y = minimum(n->right);
-            n->key = y->key;
-            n->data = y->data;
-            n->right = removeNode(n->right, y->key);
-        }
-
-        return balance(n);
     }
 
     Node* findNode(K key) const {
@@ -188,9 +160,7 @@ public:
         return n ? &n->data : nullptr;
     }
 
-    bool contains(K key) {
-        return findNode(key) != nullptr;
-    }
+    bool contains(K key) { return findNode(key) != nullptr; }
 
     // ================= DELETE =================
 
@@ -216,6 +186,30 @@ public:
     long long getRotationCount() const { return rotationCount; }
 
     long long getColourChangeCount() const { return 0; }
+
+private:
+    // ================= DELETION =================
+    Node* removeNode(Node* n, K key) {
+        if (!n) return nullptr;
+
+        if (key < n->key) n->left = removeNode(n->left, key);
+        else if (key > n->key) n->right = removeNode(n->right, key);
+        else {
+            if (!n->left || !n->right) {
+                nodeCount--;
+                Node* temp = n->left ? n->left : n->right;
+                delete n;
+                return temp;
+            }
+
+            Node* y = minimum(n->right);
+            n->key = y->key;
+            n->data = y->data;
+            n->right = removeNode(n->right, y->key);
+        }
+
+        return balance(n);
+    }
 };
 
 #endif

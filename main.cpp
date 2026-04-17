@@ -83,7 +83,8 @@ void runTest(const vector<int>& values, const string& name) {
 
 // ================= MAIN =================
 int main() {
-    vector<int> sizes = {10000, 50000, 100000};
+    //vector<int> sizes = {10000, 50000, 100000};
+    vector<int> sizes = {100000};
     mt19937_64 rng(42);
 
     cout << fixed << setprecision(3);

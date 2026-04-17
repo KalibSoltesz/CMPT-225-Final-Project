@@ -16,8 +16,7 @@ private:
         Node* right;
         Node* parent;
 
-        Node(K k, T x)
-            : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr) {}
+        Node(K k, T x) : key(k), data(x), left(nullptr), right(nullptr), parent(nullptr) {}
     };
 
     Node* root;
@@ -28,32 +27,24 @@ private:
     Node* findNode(K key) const {
         Node* cur = root;
         while (cur) {
-            if (key < cur->key)
-                cur = cur->left;
-            else if (key > cur->key)
-                cur = cur->right;
-            else
-                return cur;
+            if (key < cur->key) cur = cur->left;
+            else if (key > cur->key) cur = cur->right;
+            else return cur;
         }
         return nullptr;
     }
 
     Node* minimum(Node* n) {
-        while (n && n->left)
-            n = n->left;
+        while (n && n->left) n = n->left;
         return n;
     }
 
     void transplant(Node* u, Node* v) {
-        if (!u->parent)
-            root = v;
-        else if (u == u->parent->left)
-            u->parent->left = v;
-        else
-            u->parent->right = v;
+        if (!u->parent) root = v;
+        else if (u == u->parent->left) u->parent->left = v;
+        else u->parent->right = v;
 
-        if (v)
-            v->parent = u->parent;
+        if (v) v->parent = u->parent;
     }
 
     void inorder(Node* n) {
@@ -90,9 +81,7 @@ private:
 public:
     BST() : root(nullptr), nodeCount(0) {}
 
-    ~BST() {
-        destroy(root);
-    }
+    ~BST() { destroy(root); }
 
     // ================= INSERT =================
 
@@ -104,10 +93,8 @@ public:
 
         while (x) {
             y = x;
-            if (key < x->key)
-                x = x->left;
-            else if (key > x->key)
-                x = x->right;
+            if (key < x->key) x = x->left;
+            else if (key > x->key) x = x->right;
             else {
                 // overwrite existing
                 x->data = data;
@@ -118,12 +105,9 @@ public:
 
         z->parent = y;
 
-        if (!y)
-            root = z;
-        else if (key < y->key)
-            y->left = z;
-        else
-            y->right = z;
+        if (!y) root = z;
+        else if (key < y->key) y->left = z;
+        else y->right = z;
 
         nodeCount++;
     }
@@ -135,9 +119,7 @@ public:
         return n ? &n->data : nullptr;
     }
 
-    bool contains(K key) {
-        return findNode(key) != nullptr;
-    }
+    bool contains(K key) { return findNode(key) != nullptr; }
 
     // ================= DELETE =================
 
@@ -145,11 +127,9 @@ public:
         Node* z = findNode(key);
         if (!z) return false;
 
-        if (!z->left) {
-            transplant(z, z->right);
-        } else if (!z->right) {
-            transplant(z, z->left);
-        } else {
+        if (!z->left) transplant(z, z->right);
+        else if (!z->right) transplant(z, z->left);
+        else {
             Node* y = minimum(z->right);
 
             if (y->parent != z) {
@@ -170,17 +150,11 @@ public:
 
     // ================= STATS =================
 
-    int size() {
-        return nodeCount;
-    }
+    int size() { return nodeCount; }
 
-    int height() {
-        return calcHeight(root);
-    }
+    int height() { return calcHeight(root); }
 
-    bool isEmpty() {
-        return nodeCount == 0;
-    }
+    bool isEmpty() { return nodeCount == 0; }
 
     void printInorder() {
         inorder(root);
