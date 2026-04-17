@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 #include <cmath>
+#include <fstream>
 
 #include "BinarySearchTree.hpp"
 #include "AVL.hpp"
@@ -15,9 +16,29 @@
 using namespace std;
 using Clock = chrono::high_resolution_clock;
 
+// ================= DATA STRUCTURE FOR RESULTS =================
+struct TestResult {
+    int size;
+    string inputType;
+    string treeType;
+    double insertTime;
+    double searchTime;
+    double deleteTime;
+    long long insertRotations;
+    double avgInsertRotations;
+    long long insertColourChanges;
+    double avgInsertColourChanges;
+    long long deleteRotations;
+    double avgDeleteRotations;
+    long long deleteColourChanges;
+    double avgDeleteColourChanges;
+    int treeHeight;
+    double heightRatio;
+};
+
 // ================= RUN TEST =================
 template <typename Tree>
-void runTest(const vector<int>& values, const string& name) {
+TestResult runTest(const vector<int>& values, const string& name, int size, const string& inputType) {
     Tree tree;
 
     // ---------- INSERT ----------
@@ -56,36 +77,83 @@ void runTest(const vector<int>& values, const string& name) {
     long long totalColourChanges = tree.getColourChangeCount();
     long long deleteColourChanges = totalColourChanges - insertColourChanges;
 
+    double avgInsertRot = values.size() > 0 ? double(insertRotations) / values.size() : 0.0;
+    double avgInsertCol = values.size() > 0 ? double(insertColourChanges) / values.size() : 0.0;
+    double avgDeleteRot = values.size() > 0 ? double(deleteRotations) / values.size() : 0.0;
+    double avgDeleteCol = values.size() > 0 ? double(deleteColourChanges) / values.size() : 0.0;
+
+    // Print to console as before
     cout << name << ":\n";
     cout << "  Insert time: " << insertTime << " ms\n";
     cout << "  Search time: " << searchTime << " ms\n";
     cout << "  Delete time: " << deleteTime << " ms\n";
-
-    double avgInsertRot = values.size() > 0 ? double(insertRotations) / values.size() : 0.0;
     cout << "  Insert rotations: " << insertRotations
             << " (avg " << avgInsertRot << ")\n";
-
-    double avgDeleteRot = values.size() > 0 ? double(deleteRotations) / values.size() : 0.0;
-    cout << "  Delete rotations: " << deleteRotations
-            << " (avg " << avgDeleteRot << ")\n";
-
-    double avgInsertCol = values.size() > 0 ? double(insertColourChanges) / values.size() : 0.0;
     cout << "  Insert colour changes: " << insertColourChanges
             << " (avg " << avgInsertCol << ")\n";
-
-    double avgDeleteCol = values.size() > 0 ? double(deleteColourChanges) / values.size() : 0.0;
+    cout << "  Delete rotations: " << deleteRotations
+            << " (avg " << avgDeleteRot << ")\n";
     cout << "  Delete colour changes: " << deleteColourChanges
             << " (avg " << avgDeleteCol << ")\n";
-
     cout << "  Height: " << treeHeight
          << " (height/log2(n)=" << heightRatio << ")\n\n";
+
+    // Return structured result
+    return {
+        size, inputType, name,
+        insertTime, searchTime, deleteTime,
+        insertRotations, avgInsertRot,
+        insertColourChanges, avgInsertCol,
+        deleteRotations, avgDeleteRot,
+        deleteColourChanges, avgDeleteCol,
+        treeHeight, heightRatio
+    };
+}
+
+// ================= WRITE CSV =================
+void writeCSV(const vector<TestResult>& results, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error: Could not open file " << filename << " for writing.\n";
+        return;
+    }
+
+    // Write header
+    file << "Size,InputType,TreeType,InsertTime_ms,SearchTime_ms,DeleteTime_ms,"
+         << "InsertRotations,AvgInsertRotations,InsertColourChanges,AvgInsertColourChanges,"
+         << "DeleteRotations,AvgDeleteRotations,DeleteColourChanges,AvgDeleteColourChanges,"
+         << "TreeHeight,HeightRatio\n";
+
+    // Write data
+    file << fixed << setprecision(6);
+    for (const auto& result : results) {
+        file << result.size << ","
+             << result.inputType << ","
+             << result.treeType << ","
+             << result.insertTime << ","
+             << result.searchTime << ","
+             << result.deleteTime << ","
+             << result.insertRotations << ","
+             << result.avgInsertRotations << ","
+             << result.insertColourChanges << ","
+             << result.avgInsertColourChanges << ","
+             << result.deleteRotations << ","
+             << result.avgDeleteRotations << ","
+             << result.deleteColourChanges << ","
+             << result.avgDeleteColourChanges << ","
+             << result.treeHeight << ","
+             << result.heightRatio << "\n";
+    }
+
+    file.close();
+    cout << "\n✓ Results exported to " << filename << "\n";
 }
 
 // ================= MAIN =================
 int main() {
-    //vector<int> sizes = {10000, 50000, 100000};
-    vector<int> sizes = {100000};
+    vector<int> sizes = {100, 1000, 10000, 50000, 100000};
     mt19937_64 rng(42);
+    vector<TestResult> allResults;
 
     cout << fixed << setprecision(3);
 
@@ -101,10 +169,10 @@ int main() {
 
         cout << "----- RANDOM INPUT -----\n\n";
 
-        runTest<BST<int, int>>(randomValues, "Standard BST");
-        runTest<AVL<int, int>>(randomValues, "AVL Tree");
-        runTest<RedBlack<int, int>>(randomValues, "Red-Black Tree");
-        runTest<LLRB<int, int>>(randomValues, "Left-Leaning RB Tree");
+        allResults.push_back(runTest<BST<int, int>>(randomValues, "Standard BST", n, "Random"));
+        allResults.push_back(runTest<AVL<int, int>>(randomValues, "AVL Tree", n, "Random"));
+        allResults.push_back(runTest<RedBlack<int, int>>(randomValues, "Red-Black Tree", n, "Random"));
+        allResults.push_back(runTest<LLRB<int, int>>(randomValues, "Left-Leaning RB Tree", n, "Random"));
 
         // ================= SORTED INPUT =================
         vector<int> sortedValues(n);
@@ -112,11 +180,14 @@ int main() {
 
         cout << "----- SORTED INPUT (Worst Case BST) -----\n\n";
 
-        runTest<BST<int, int>>(sortedValues, "Standard BST");
-        runTest<AVL<int, int>>(sortedValues, "AVL Tree");
-        runTest<RedBlack<int, int>>(sortedValues, "Red-Black Tree");
-        runTest<LLRB<int, int>>(sortedValues, "Left-Leaning RB Tree");
+        allResults.push_back(runTest<BST<int, int>>(sortedValues, "Standard BST", n, "Sorted"));
+        allResults.push_back(runTest<AVL<int, int>>(sortedValues, "AVL Tree", n, "Sorted"));
+        allResults.push_back(runTest<RedBlack<int, int>>(sortedValues, "Red-Black Tree", n, "Sorted"));
+        allResults.push_back(runTest<LLRB<int, int>>(sortedValues, "Left-Leaning RB Tree", n, "Sorted"));
     }
+
+    // Export results to CSV
+    writeCSV(allResults, "test_results.csv");
 
     return 0;
 }
